@@ -9,17 +9,22 @@ type Group struct {
 
 // Selector ::= simple_selector_sequence [ combinator simple_selector_sequence ]*
 type Selector struct {
-	Left  SSS
-	Right SSS
+	Left  TypeSelector
+	Right TypeSelector
 	Token token.Token
 }
 
-// SSS ::= [ type_selector | universal ]
-//     		 [ HASH | class | attrib | pseudo | negation ]*
-//   		 | [ HASH | class | attrib | pseudo | negation ]+
-type SSS struct {
+// Sequence ::= [ type_selector | universal ]
+//     		 simple_sequence*
+//   		 | simple_sequence+
+type Sequence struct {
 	TypeSelector
 	Universal
+	TypeID byte
+}
+
+// SimpleSelector ::= [ HASH | class | attrib | pseudo | negation ]
+type SimpleSelector struct {
 	Hash
 	Class
 	Attrib
