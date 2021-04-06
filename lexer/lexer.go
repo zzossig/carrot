@@ -21,6 +21,11 @@ func New(input string) *Lexer {
 	return l
 }
 
+// PeekSpace checks if next char is space or not
+func (l *Lexer) PeekSpace() bool {
+	return unicode.IsSpace(rune(l.ch))
+}
+
 // NextToken returns next token by reading the input characters
 func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
@@ -177,7 +182,7 @@ func (l *Lexer) readNumber() string {
 
 func (l *Lexer) readIdent() string {
 	pos := l.pos
-	for isLetter(l.ch) {
+	for isLetter(l.ch) || isDigit(l.ch) {
 		l.readChar()
 	}
 	return l.input[pos:l.pos]

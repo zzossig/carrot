@@ -8,7 +8,7 @@ import (
 
 func TestNextToken(t *testing.T) {
 	input := `
-		.class
+		.c-l_a1s2s7
 		"string"
 		#id
 		*
@@ -26,6 +26,7 @@ func TestNextToken(t *testing.T) {
 		[attr|=main]
 		[attr*=href]
 		p:nth-child(2)
+		:nth-child(2n-1)
 		. class
 		`
 
@@ -34,7 +35,7 @@ func TestNextToken(t *testing.T) {
 		expectedLiteral string
 	}{
 		{token.DOT, "."},
-		{token.IDENT, "class"},
+		{token.IDENT, "c-l_a1s2s7"},
 		{token.STRING, "string"},
 		{token.HASH, "id"},
 		{token.ASTERISK, "*"},
@@ -90,6 +91,11 @@ func TestNextToken(t *testing.T) {
 		{token.COLON, ":"},
 		{token.FUNCTION, "nth-child"},
 		{token.NUM, "2"},
+		{token.RPAREN, ")"},
+		{token.COLON, ":"},
+		{token.FUNCTION, "nth-child"},
+		{token.NUM, "2"},
+		{token.IDENT, "n-1"},
 		{token.RPAREN, ")"},
 		{token.ILLEGAL, "."},
 		{token.IDENT, "class"},

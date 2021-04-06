@@ -29,9 +29,11 @@ const (
 	RBRACKET Type = "]"
 	VBAR     Type = "|"
 	PLUS     Type = "+"
+	MINUS    Type = "-"
 	GT       Type = ">"
 	EQ       Type = "="
 	TILDE    Type = "~"
+	S        Type = "w"
 
 	INCLUDES       Type = "~="
 	DASHMATCH      Type = "|="

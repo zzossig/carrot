@@ -15,7 +15,7 @@ type Expression interface {
 
 // Group ::= selector [ COMMA S* selector ]*
 type Group struct {
-	Selectors []Selector
+	Selectors []Expression
 }
 
 func (g *Group) expression() {}
@@ -32,8 +32,8 @@ func (g *Group) String() string {
 
 // Selector ::= simple_selector_sequence [ combinator simple_selector_sequence ]*
 type Selector struct {
-	Left  TypeSelector
-	Right TypeSelector
+	Left  Expression
+	Right Expression
 	Token token.Token
 }
 
@@ -41,29 +41,37 @@ func (s *Selector) expression() {}
 func (s *Selector) String() string {
 	var sb strings.Builder
 
-	sb.WriteString(s.Left.String())
+	if s.Left != nil {
+		sb.WriteString(s.Left.String())
+	}
+
 	switch s.Token.Type {
 	case token.PLUS:
 		fallthrough
 	case token.GT:
 		fallthrough
 	case token.TILDE:
+		sb.WriteString(" ")
 		sb.WriteString(s.Token.Literal)
+		sb.WriteString(" ")
 	default:
 		sb.WriteString(" ")
 	}
-	sb.WriteString(s.Right.String())
+
+	if s.Right != nil {
+		sb.WriteString(s.Right.String())
+	}
 
 	return sb.String()
 }
 
-// Sequence ::= [ type_selector | universal ]
+// Sequence ::= [ type_selector | universal |  ]
 //     		 simple_sequence*
 //   		 | simple_sequence+
+// TypeID: 1 - type_selector, 2 - universal, 3 - empty
 type Sequence struct {
-	TypeSelector
-	Universal
-	Seq    []SimpleSelector
+	Expression
+	Exprs  []Expression
 	TypeID byte
 }
 
@@ -71,65 +79,14 @@ func (s *Sequence) expression() {}
 func (s *Sequence) String() string {
 	var sb strings.Builder
 
-	switch s.TypeID {
-	case 1:
-		sb.WriteString(s.TypeSelector.String())
-	case 2:
-		sb.WriteString(s.Universal.String())
+	if s.Expression != nil {
+		sb.WriteString(s.Expression.String())
 	}
-
-	for _, ss := range s.Seq {
+	for _, ss := range s.Exprs {
 		sb.WriteString(ss.String())
 	}
 
 	return sb.String()
-}
-
-// SimpleSelector ::= [ HASH | class | attrib | pseudo | negation ]
-type SimpleSelector struct {
-	Hash
-	Class
-	Attrib
-	Pseudo
-	Negation
-	TypeID byte
-}
-
-func (ss *SimpleSelector) expression() {}
-func (ss *SimpleSelector) String() string {
-	switch ss.TypeID {
-	case 1:
-		return ss.Hash.String()
-	case 2:
-		return ss.Class.String()
-	case 3:
-		return ss.Attrib.String()
-	case 4:
-		return ss.Pseudo.String()
-	case 5:
-		return ss.Negation.String()
-	}
-	return ""
-}
-
-// TypeSelector ::= element_name
-type TypeSelector struct {
-	ElementName
-}
-
-func (ts *TypeSelector) expression() {}
-func (ts *TypeSelector) String() string {
-	return ts.ElementName.String()
-}
-
-// element_name ::= IDENT
-type ElementName struct {
-	Ident
-}
-
-func (en *ElementName) expression() {}
-func (en *ElementName) String() string {
-	return en.Ident.String()
 }
 
 // Universal ::= '*'
@@ -142,89 +99,109 @@ func (u *Universal) String() string {
 	return u.Token.Literal
 }
 
-// Class ::= '.' IDENT
+// Class ::= '.' Name
 type Class struct {
-	Ident
+	Name string
 }
 
 func (c *Class) expression() {}
 func (c *Class) String() string {
-	return fmt.Sprintf(".%s", c.Ident.String())
+	return fmt.Sprintf(".%s", c.Name)
 }
 
-// Hash ::= '#' Ident
+// Hash ::= '#' Name
 type Hash struct {
-	Ident
+	Name string
 }
 
 func (h *Hash) expression() {}
 func (h *Hash) String() string {
-	return fmt.Sprintf("#%s", h.Ident.String())
+	return fmt.Sprintf("#%s", h.Name)
 }
 
-// Attrib ::= '[' S* [ namespace_prefix ]? IDENT S*
+// Attrib ::= '[' AttrExpr ']'
+type Attrib struct {
+	Expression
+}
+
+func (a *Attrib) expression() {}
+func (a *Attrib) String() string {
+	return fmt.Sprintf("[%s]", a.Expression.String())
+}
+
+// AttrExpr ::= S* [ namespace_prefix ]? IDENT S*
 //        [ [ PREFIXMATCH |
 //            SUFFIXMATCH |
 //            SUBSTRINGMATCH |
 //            '=' |
 //            INCLUDES |
 //            DASHMATCH ] S* [ IDENT | STRING ] S*
-//        ]? ']'
-type Attrib struct {
-	Left, Right Ident
+//        ]?
+type AttrExpr struct {
+	Left, Right Expression
 	Token       token.Token
 	TypeID      byte
 }
 
-func (a *Attrib) expression() {}
-func (a *Attrib) String() string {
-	switch a.TypeID {
+func (ae *AttrExpr) expression() {}
+func (ae *AttrExpr) String() string {
+	switch ae.TypeID {
 	case 1:
-		return fmt.Sprintf("[%s]", a.Left.String())
+		return fmt.Sprintf("%s", ae.Left.String())
 	case 2:
-		return fmt.Sprintf("[%s%s%s]", a.Left.Value, a.Token.Literal, a.Right.Value)
+		return fmt.Sprintf("%s%s%s", ae.Left.String(), ae.Token.Literal, ae.Right.String())
 	}
 	return ""
 }
 
 // Negation ::= NOT S* negation_arg S* ')'
-// negation_arg ::= type_selector | universal | HASH | class | attrib | pseudo
+// negation_arg ::= ident | universal | HASH | class | attrib | pseudo
 type Negation struct {
-	TypeSelector
-	Universal
-	Hash
-	Class
-	Attrib
-	Pseudo
-	TypeID byte
+	*NArg
 }
 
 func (n *Negation) expression() {}
 func (n *Negation) String() string {
 	var sb strings.Builder
 	sb.WriteString(":not(")
-	switch n.TypeID {
-	case 1:
-		sb.WriteString(n.TypeSelector.String())
-	case 2:
-		sb.WriteString(n.Universal.String())
-	case 3:
-		sb.WriteString(n.Hash.String())
-	case 4:
-		sb.WriteString(n.Class.String())
-	case 5:
-		sb.WriteString(n.Attrib.String())
-	case 6:
-		sb.WriteString(n.Pseudo.String())
-	}
+	sb.WriteString(n.NArg.String())
 	sb.WriteString(")")
 	return sb.String()
 }
 
+// NArg ::= type_selector | universal | HASH | class | attrib | pseudo
+type NArg struct {
+	*Ident
+	*Universal
+	*Hash
+	*Class
+	*Attrib
+	*Pseudo
+	TypeID byte
+}
+
+func (na *NArg) String() string {
+	switch na.TypeID {
+	case 1:
+		return na.Ident.String()
+	case 2:
+		return na.Universal.String()
+	case 3:
+		return na.Hash.String()
+	case 4:
+		return na.Class.String()
+	case 5:
+		return na.Attrib.String()
+	case 6:
+		return na.Pseudo.String()
+	}
+	return ""
+}
+
 // Pseudo ::= ':' ':'? [ IDENT | functional_pseudo ]
 type Pseudo struct {
-	Ident
-	FunctionalPseudo
+	*Ident
+	*FunctionalPseudo
 	Token  token.Token
 	TypeID byte
 }
@@ -242,10 +219,10 @@ func (p *Pseudo) String() string {
 	return sb.String()
 }
 
-// FunctionalPseudo ::= FUNCTION S* expression ')'
+// FunctionalPseudo ::= FUNCTION S* arg ')'
 type FunctionalPseudo struct {
 	Token token.Token
-	Arg
+	*Arg
 }
 
 func (fp *FunctionalPseudo) expression() {}
@@ -255,10 +232,10 @@ func (fp *FunctionalPseudo) String() string {
 
 // Arg ::= DIMENSION | NUMBER | STRING | IDENT
 type Arg struct {
-	Ident
-	Str
-	Number
-	Dimension
+	*Dimension
+	*Number
+	*Str
+	*Ident
 	TypeID byte
 }
 
@@ -282,6 +259,7 @@ type Number struct {
 	Value int
 }
 
+func (n *Number) expression() {}
 func (n *Number) String() string {
 	return fmt.Sprintf("%d", n.Value)
 }
@@ -291,6 +269,7 @@ type Ident struct {
 	Value string
 }
 
+func (i *Ident) expression() {}
 func (i *Ident) String() string {
 	return i.Value
 }
@@ -300,15 +279,30 @@ type Str struct {
 	Value string
 }
 
+func (s *Str) expression() {}
 func (s *Str) String() string {
-	return s.Value
+	return fmt.Sprintf("%q", s.Value)
 }
 
 // Dimension ::= an + b
 type Dimension struct {
-	A, B int
+	A, B     int
+	Aop, Bop string
 }
 
+func (d *Dimension) expression() {}
 func (d *Dimension) String() string {
-	return fmt.Sprintf("%dn + %d", d.A, d.B)
+	var sb strings.Builder
+	if d.Aop == "-" {
+		sb.WriteString("-")
+	}
+	if d.A != 1 {
+		sb.WriteString(fmt.Sprintf("%d", d.A))
+	}
+	sb.WriteString("n")
+	if d.Bop != "" {
+		sb.WriteString(d.Bop)
+		sb.WriteString(fmt.Sprintf("%d", d.B))
+	}
+	return sb.String()
 }
