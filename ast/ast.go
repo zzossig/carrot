@@ -65,14 +65,12 @@ func (s *Selector) String() string {
 	return sb.String()
 }
 
-// Sequence ::= [ type_selector | universal |  ]
+// Sequence ::= [ type_selector | universal ]
 //     		 simple_sequence*
 //   		 | simple_sequence+
-// TypeID: 1 - type_selector, 2 - universal, 3 - empty
 type Sequence struct {
 	Expression
-	Exprs  []Expression
-	TypeID byte
+	Exprs []Expression
 }
 
 func (s *Sequence) expression() {}
@@ -121,12 +119,12 @@ func (h *Hash) String() string {
 
 // Attrib ::= '[' AttrExpr ']'
 type Attrib struct {
-	Expression
+	*AttrExpr
 }
 
 func (a *Attrib) expression() {}
 func (a *Attrib) String() string {
-	return fmt.Sprintf("[%s]", a.Expression.String())
+	return fmt.Sprintf("[%s]", a.AttrExpr.String())
 }
 
 // AttrExpr ::= S* [ namespace_prefix ]? IDENT S*
@@ -138,7 +136,7 @@ func (a *Attrib) String() string {
 //            DASHMATCH ] S* [ IDENT | STRING ] S*
 //        ]?
 type AttrExpr struct {
-	Left, Right Expression
+	Left, Right *Ident
 	Token       token.Token
 	TypeID      byte
 }

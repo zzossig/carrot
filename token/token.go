@@ -45,12 +45,36 @@ const (
 	FUNCTION       Type = "{ident}("
 )
 
-var keywords = map[string]Type{}
+var tokens = map[string]Type{
+	"'":  SQUOTE,
+	"\"": DQUOTE,
+	"*":  ASTERISK,
+	".":  DOT,
+	",":  COMMA,
+	":":  COLON,
+	"::": DCOLON,
+	"(":  LPAREN,
+	")":  RPAREN,
+	"[":  LBRACKET,
+	"]":  RBRACKET,
+	"|":  VBAR,
+	"+":  PLUS,
+	"-":  MINUS,
+	">":  GT,
+	"=":  EQ,
+	"~":  TILDE,
+	"w":  S,
+	"~=": INCLUDES,
+	"|=": DASHMATCH,
+	"^=": PREFIXMATCH,
+	"$=": SUFFIXMATCH,
+	"*=": SUBSTRINGMATCH,
+}
 
-// LookupIdent returns identifier token type
-func LookupIdent(ident string) Type {
-	if tok, ok := keywords[ident]; ok {
-		return tok
+// TokenMap ..
+func TokenMap(t string) Token {
+	if tok, ok := tokens[t]; ok {
+		return Token{Type: tok, Literal: t}
 	}
-	return IDENT
+	return Token{Type: ILLEGAL, Literal: t}
 }

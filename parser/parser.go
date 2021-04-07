@@ -75,6 +75,10 @@ func (p *Parser) peekTokenIs(t token.Type, ts ...token.Type) bool {
 	return p.peekToken.Type == t
 }
 
+func (p *Parser) curTokenIs(t token.Type) bool {
+	return p.curToken.Type == t
+}
+
 func (p *Parser) expectPeek(t token.Type) bool {
 	if p.peekTokenIs(t) {
 		p.nextToken()
@@ -138,31 +142,25 @@ func (p *Parser) parseSequence() ast.Expression {
 
 	switch p.curToken.Type {
 	case token.IDENT:
-		seq.TypeID = 1
 		seq.Expression = p.parseIdent()
 	case token.ASTERISK:
-		seq.TypeID = 2
 		seq.Expression = p.parseUniversal()
 	case token.HASH:
-		seq.TypeID = 3
 		seq.Exprs = append(seq.Exprs, p.parseHash())
 	case token.DOT:
-		seq.TypeID = 3
 		seq.Exprs = append(seq.Exprs, p.parseClass())
 	case token.LBRACKET:
-		seq.TypeID = 3
 		seq.Exprs = append(seq.Exprs, p.parseAttr())
 	case token.COLON:
 		fallthrough
 	case token.DCOLON:
-		seq.TypeID = 3
 		seq.Exprs = append(seq.Exprs, p.parsePseudo())
 	}
 
 	if p.peekSpace {
 		if !p.peekTokenIs(token.EOF, token.PLUS, token.GT, token.TILDE) {
 			p.nextToken()
-			selector := &ast.Selector{Left: seq, Token: token.Token{Type: token.S, Literal: "whitespace"}}
+			selector := &ast.Selector{Left: seq, Token: token.TokenMap("w")}
 			selector.Right = p.parseExpression()
 			return selector
 		} else {
@@ -182,7 +180,7 @@ func (p *Parser) parseSimpleSequence(seq *ast.Sequence) ast.Expression {
 		if p.peekSpace {
 			if !p.peekTokenIs(token.EOF, token.PLUS, token.GT, token.TILDE) {
 				p.nextToken()
-				selector := &ast.Selector{Left: seq, Token: token.Token{Type: token.S, Literal: "whitespace"}}
+				selector := &ast.Selector{Left: seq, Token: token.TokenMap("w")}
 				selector.Right = p.parseExpression()
 				return selector
 			} else {
@@ -322,8 +320,8 @@ func (p *Parser) parseAttr() ast.Expression {
 		p.peekTokenIs(token.PREFIXMATCH) ||
 		p.peekTokenIs(token.SUFFIXMATCH) ||
 		p.peekTokenIs(token.SUBSTRINGMATCH) {
-		ident := p.parseIdent()
-		attr.Expression = p.parseAttrExpr(ident)
+		ident := p.parseIdent().(*ast.Ident)
+		attr.AttrExpr = p.parseAttrExpr(ident)
 		if !p.expectPeek(token.RBRACKET) {
 			return nil
 		}
@@ -331,7 +329,8 @@ func (p *Parser) parseAttr() ast.Expression {
 		return attr
 	}
 
-	attr.Expression = p.parseIdent()
+	ident := p.parseIdent().(*ast.Ident)
+	attr.AttrExpr = &ast.AttrExpr{Left: ident, TypeID: 1}
 	if !p.expectPeek(token.RBRACKET) {
 		return nil
 	}
@@ -339,7 +338,7 @@ func (p *Parser) parseAttr() ast.Expression {
 	return attr
 }
 
-func (p *Parser) parseAttrExpr(left ast.Expression) ast.Expression {
+func (p *Parser) parseAttrExpr(left *ast.Ident) *ast.AttrExpr {
 	ae := &ast.AttrExpr{Left: left}
 
 	p.nextToken()
@@ -351,7 +350,12 @@ func (p *Parser) parseAttrExpr(left ast.Expression) ast.Expression {
 		ae.Token = p.curToken
 
 		p.nextToken()
-		ae.Right = p.parseExpression()
+		if p.curTokenIs(token.IDENT) {
+			ae.Right = p.parseIdent().(*ast.Ident)
+		} else if p.curTokenIs(token.STRING) {
+			str := p.parseString().(*ast.Str)
+			ae.Right = &ast.Ident{Value: str.Value}
+		}
 	default:
 		ae.TypeID = 1
 	}

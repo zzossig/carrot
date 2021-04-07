@@ -122,7 +122,7 @@ func (l *Lexer) NextToken() token.Token {
 				l.readChar()
 				tok.Type = token.FUNCTION
 			} else {
-				tok.Type = token.LookupIdent(tok.Literal)
+				tok.Type = token.IDENT
 			}
 			return tok
 		} else if isDigit(l.ch) {
