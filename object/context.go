@@ -7,6 +7,7 @@ import (
 type Context struct {
 	Doc   *html.Node
 	CNode []*html.Node
+	CType string
 }
 
 func NewContext() *Context {

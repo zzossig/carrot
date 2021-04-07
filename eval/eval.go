@@ -23,14 +23,14 @@ func Eval(expr ast.Expression, ctx *object.Context) []*html.Node {
 		return evalClass(expr, ctx)
 	case *ast.Hash:
 		return evalHash(expr, ctx)
-	case *ast.Attrib:
-		return evalAttrib(expr, ctx)
 	case *ast.Ident:
 		return evalIdent(expr, ctx)
-	case *ast.Pseudo:
-		return evalPseudo(expr, ctx)
 	case *ast.Negation:
 		return evalNegation(expr, ctx)
+	case *ast.Attrib:
+		return evalAttrib(expr, ctx, false)
+	case *ast.Pseudo:
+		return evalPseudo(expr, ctx, false)
 	}
 	return nil
 }
@@ -76,6 +76,10 @@ func evalSelector(expr ast.Expression, ctx *object.Context) []*html.Node {
 func evalSequence(expr ast.Expression, ctx *object.Context) []*html.Node {
 	s := expr.(*ast.Sequence)
 
+	if ident, ok := s.Expression.(*ast.Ident); ok {
+		ctx.CType = ident.Value
+	}
+
 	if s.Expression != nil {
 		h := Eval(s.Expression, ctx)
 		ctx.CNode = h
@@ -86,11 +90,12 @@ func evalSequence(expr ast.Expression, ctx *object.Context) []*html.Node {
 		ctx.CNode = ss
 	}
 
+	ctx.CType = ""
 	return ctx.CNode
 }
 
 func evalUniversal(expr ast.Expression, ctx *object.Context) []*html.Node {
-	return ctx.CNode
+	return collectDescOrSelf(ctx)
 }
 
 func evalClass(expr ast.Expression, ctx *object.Context) []*html.Node {
@@ -103,7 +108,7 @@ func evalClass(expr ast.Expression, ctx *object.Context) []*html.Node {
 				f := strings.Fields(a.Val)
 				for _, s := range f {
 					if s == c.Name {
-						nodes = append(nodes, n)
+						nodes = appendNode(nodes, n)
 					}
 				}
 			}
@@ -121,7 +126,7 @@ func evalHash(expr ast.Expression, ctx *object.Context) []*html.Node {
 	for _, n := range ctx.CNode {
 		for _, a := range n.Attr {
 			if a.Key == "id" && a.Val == h.Name {
-				nodes = append(nodes, n)
+				nodes = appendNode(nodes, n)
 			}
 		}
 	}
@@ -130,78 +135,203 @@ func evalHash(expr ast.Expression, ctx *object.Context) []*html.Node {
 	return nodes
 }
 
-func evalAttrib(expr ast.Expression, ctx *object.Context) []*html.Node {
+func evalAttrib(expr ast.Expression, ctx *object.Context, isNeg bool) []*html.Node {
 	ae := expr.(*ast.Attrib).AttrExpr
 	var nodes []*html.Node
 
 	switch ae.TypeID {
 	case 1:
-		for _, n := range ctx.CNode {
-			for _, a := range n.Attr {
-				if a.Key == ae.Left.Value {
-					nodes = append(nodes, n)
+		if isNeg {
+			has := false
+			for _, n := range ctx.CNode {
+				for _, a := range n.Attr {
+					if a.Key == ae.Left.Value {
+						has = true
+					}
+				}
+
+				if !has {
+					nodes = appendNode(nodes, n)
+				}
+				has = false
+			}
+		} else {
+			for _, n := range ctx.CNode {
+				for _, a := range n.Attr {
+					if a.Key == ae.Left.Value {
+						nodes = appendNode(nodes, n)
+					}
 				}
 			}
 		}
 	case 2:
 		switch ae.Token.Type {
 		case token.EQ:
-			for _, n := range ctx.CNode {
-				for _, a := range n.Attr {
-					if a.Key == ae.Left.Value && a.Val == ae.Right.Value {
-						nodes = append(nodes, n)
+			if isNeg {
+				has := false
+				for _, n := range ctx.CNode {
+					for _, a := range n.Attr {
+						if a.Key == ae.Left.Value && a.Val == ae.Right.Value {
+							has = true
+						}
+					}
+
+					if !has {
+						nodes = appendNode(nodes, n)
+					}
+					has = false
+				}
+			} else {
+				for _, n := range ctx.CNode {
+					for _, a := range n.Attr {
+						if a.Key == ae.Left.Value && a.Val == ae.Right.Value {
+							nodes = appendNode(nodes, n)
+						}
 					}
 				}
 			}
 		case token.PREFIXMATCH:
-			for _, n := range ctx.CNode {
-				for _, a := range n.Attr {
-					if a.Key == ae.Left.Value {
-						if strings.HasPrefix(a.Val, ae.Right.Value) {
-							nodes = append(nodes, n)
+			if isNeg {
+				has := false
+				for _, n := range ctx.CNode {
+					for _, a := range n.Attr {
+						if a.Key == ae.Left.Value {
+							if strings.HasPrefix(a.Val, ae.Right.Value) {
+								has = true
+							}
+						}
+					}
+
+					if !has {
+						nodes = appendNode(nodes, n)
+					}
+					has = false
+				}
+			} else {
+				for _, n := range ctx.CNode {
+					for _, a := range n.Attr {
+						if a.Key == ae.Left.Value {
+							if strings.HasPrefix(a.Val, ae.Right.Value) {
+								nodes = appendNode(nodes, n)
+							}
 						}
 					}
 				}
 			}
 		case token.SUFFIXMATCH:
-			for _, n := range ctx.CNode {
-				for _, a := range n.Attr {
-					if a.Key == ae.Left.Value {
-						if strings.HasSuffix(a.Val, ae.Right.Value) {
-							nodes = append(nodes, n)
+			if isNeg {
+				has := false
+				for _, n := range ctx.CNode {
+					for _, a := range n.Attr {
+						if a.Key == ae.Left.Value {
+							if strings.HasSuffix(a.Val, ae.Right.Value) {
+								has = true
+							}
+						}
+					}
+
+					if !has {
+						nodes = appendNode(nodes, n)
+					}
+					has = false
+				}
+			} else {
+				for _, n := range ctx.CNode {
+					for _, a := range n.Attr {
+						if a.Key == ae.Left.Value {
+							if strings.HasSuffix(a.Val, ae.Right.Value) {
+								nodes = appendNode(nodes, n)
+							}
 						}
 					}
 				}
 			}
 		case token.SUBSTRINGMATCH:
-			for _, n := range ctx.CNode {
-				for _, a := range n.Attr {
-					if a.Key == ae.Left.Value {
-						if strings.Contains(a.Val, ae.Right.Value) {
-							nodes = append(nodes, n)
+			if isNeg {
+				has := false
+				for _, n := range ctx.CNode {
+					for _, a := range n.Attr {
+						if a.Key == ae.Left.Value {
+							if strings.Contains(a.Val, ae.Right.Value) {
+								has = true
+							}
+						}
+					}
+
+					if !has {
+						nodes = appendNode(nodes, n)
+					}
+					has = false
+				}
+			} else {
+				for _, n := range ctx.CNode {
+					for _, a := range n.Attr {
+						if a.Key == ae.Left.Value {
+							if strings.Contains(a.Val, ae.Right.Value) {
+								nodes = appendNode(nodes, n)
+							}
 						}
 					}
 				}
 			}
 		case token.INCLUDES:
-			for _, n := range ctx.CNode {
-				for _, a := range n.Attr {
-					if a.Key == ae.Left.Value {
-						f := strings.Fields(a.Val)
-						for _, s := range f {
-							if s == ae.Right.Value {
-								nodes = append(nodes, n)
+			if isNeg {
+				has := false
+				for _, n := range ctx.CNode {
+					for _, a := range n.Attr {
+						if a.Key == ae.Left.Value {
+							f := strings.Fields(a.Val)
+							for _, s := range f {
+								if s == ae.Right.Value {
+									has = true
+								}
+							}
+						}
+					}
+
+					if !has {
+						nodes = appendNode(nodes, n)
+					}
+					has = false
+				}
+			} else {
+				for _, n := range ctx.CNode {
+					for _, a := range n.Attr {
+						if a.Key == ae.Left.Value {
+							f := strings.Fields(a.Val)
+							for _, s := range f {
+								if s == ae.Right.Value {
+									nodes = appendNode(nodes, n)
+								}
 							}
 						}
 					}
 				}
 			}
 		case token.DASHMATCH:
-			for _, n := range ctx.CNode {
-				for _, a := range n.Attr {
-					if a.Key == ae.Left.Value {
-						if strings.HasPrefix(a.Val, "en") {
-							nodes = append(nodes, n)
+			if isNeg {
+				has := false
+				for _, n := range ctx.CNode {
+					for _, a := range n.Attr {
+						if a.Key == ae.Left.Value {
+							if strings.HasPrefix(a.Val, "en") {
+								has = true
+							}
+						}
+					}
+
+					if !has {
+						nodes = appendNode(nodes, n)
+					}
+					has = false
+				}
+			} else {
+				for _, n := range ctx.CNode {
+					for _, a := range n.Attr {
+						if a.Key == ae.Left.Value {
+							if strings.HasPrefix(a.Val, "en") {
+								nodes = appendNode(nodes, n)
+							}
 						}
 					}
 				}
@@ -219,7 +349,7 @@ func evalIdent(expr ast.Expression, ctx *object.Context) []*html.Node {
 
 	for _, n := range ctx.CNode {
 		if n.Data == i.Value {
-			nodes = append(nodes, n)
+			nodes = appendNode(nodes, n)
 		}
 	}
 
@@ -235,7 +365,7 @@ func evalNegation(expr ast.Expression, ctx *object.Context) []*html.Node {
 	case 1:
 		for _, n := range ctx.CNode {
 			if n.Data != na.Ident.Value {
-				nodes = append(nodes, n)
+				nodes = appendNode(nodes, n)
 			}
 		}
 	case 2:
@@ -253,9 +383,9 @@ func evalNegation(expr ast.Expression, ctx *object.Context) []*html.Node {
 			}
 
 			if !hasID {
-				nodes = append(nodes, n)
+				nodes = appendNode(nodes, n)
 			} else if idVal != "" && idVal != na.Hash.Name {
-				nodes = append(nodes, n)
+				nodes = appendNode(nodes, n)
 			}
 
 			hasID = false
@@ -280,15 +410,16 @@ func evalNegation(expr ast.Expression, ctx *object.Context) []*html.Node {
 			}
 
 			if !hasClass {
-				nodes = append(nodes, n)
+				nodes = appendNode(nodes, n)
 			} else if classVal != "" && classVal != na.Class.Name {
-				nodes = append(nodes, n)
+				nodes = appendNode(nodes, n)
 			}
 
 			hasClass = false
 			classVal = ""
 		}
 	case 5:
+		nodes = evalAttrib(na.Attrib, ctx, true)
 	case 6:
 	}
 
@@ -296,6 +427,17 @@ func evalNegation(expr ast.Expression, ctx *object.Context) []*html.Node {
 	return nodes
 }
 
-func evalPseudo(expr ast.Expression, ctx *object.Context) []*html.Node {
-	return nil
+func evalPseudo(expr ast.Expression, ctx *object.Context, isNeg bool) []*html.Node {
+	p := expr.(*ast.Pseudo)
+	var nodes []*html.Node
+
+	switch p.TypeID {
+	case 1:
+		nodes = evalPIdent(p.Ident, ctx, isNeg)
+	case 2:
+		nodes = evalPFP(p.FunctionalPseudo, ctx, isNeg)
+	}
+
+	ctx.CNode = nodes
+	return nodes
 }
