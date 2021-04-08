@@ -174,7 +174,7 @@ func isNChild(n *html.Node, num int) bool {
 	for c := n.Parent.FirstChild; c != nil; c = c.NextSibling {
 		if c.Type == html.ElementNode {
 			i++
-			if i == num {
+			if i == num && n == c {
 				return true
 			}
 		}
@@ -192,7 +192,7 @@ func isNLastChild(n *html.Node, num int) bool {
 	for c := n.Parent.LastChild; c != nil; c = c.PrevSibling {
 		if c.Type == html.ElementNode {
 			i++
-			if i == num {
+			if i == num && n == c {
 				return true
 			}
 		}
@@ -263,7 +263,7 @@ func isNthChild(n *html.Node, d *ast.Dimension) bool {
 	for c := n.Parent.FirstChild; c != nil; c = c.NextSibling {
 		if c.Type == html.ElementNode {
 			i++
-			if remaining(d, i) == 0 && i >= d.B {
+			if remaining(d, i) == 0 && i >= d.B && n == c {
 				return true
 			}
 		}
@@ -298,7 +298,7 @@ func isNthLastChild(n *html.Node, d *ast.Dimension) bool {
 	for c := n.Parent.LastChild; c != nil; c = c.PrevSibling {
 		if c.Type == html.ElementNode {
 			i++
-			if remaining(d, i) == 0 && i >= d.B {
+			if remaining(d, i) == 0 && i >= d.B && n == c {
 				return true
 			}
 		}

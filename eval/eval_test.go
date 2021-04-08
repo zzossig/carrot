@@ -87,11 +87,6 @@ func TestCarrot(t *testing.T) {
 	// 	t.Errorf("wrong node selected")
 	// }
 
-	// e13 := testEval("div[id='e'] ~ p")
-	// if len(e13) != 1 {
-	// 	t.Errorf("wrong number of items. got=%d, expected=1", len(e13))
-	// }
-
 	// e14 := testEval("p[class='foo']")
 	// if len(e14) != 2 {
 	// 	t.Errorf("wrong number of items. got=%d, expected=2", len(e14))
@@ -117,9 +112,49 @@ func TestCarrot(t *testing.T) {
 	// 	t.Errorf("wrong number of items. got=%d, expected=3", len(e18))
 	// }
 
-	e19 := testEval("p[class*=foo]")
-	if len(e19) != 7 {
-		t.Errorf("wrong number of items. got=%d, expected=7", len(e19))
+	// e19 := testEval("p[class*=foo]")
+	// if len(e19) != 7 {
+	// 	t.Errorf("wrong number of items. got=%d, expected=7", len(e19))
+	// }
+
+	// e20 := testEval("*.p.q.r")
+	// if len(e20) != 1 {
+	// 	t.Errorf("wrong number of items. got=%d, expected=1", len(e20))
+	// }
+
+	// e21 := testEval(".foobar")
+	// if len(e21) != 2 {
+	// 	t.Errorf("wrong number of items. got=%d, expected=2", len(e21))
+	// }
+
+	// e22 := testEval(".depth .foobar")
+	// if len(e22) != 1 {
+	// 	t.Errorf("wrong number of items. got=%d, expected=1", len(e22))
+	// }
+
+	// e23 := testEval("div[id='e'] ~ p")
+	// if len(e23) != 1 {
+	// 	t.Errorf("wrong number of items. got=%d, expected=1", len(e23))
+	// }
+
+	// e24 := testEval("div[id='e'] > p")
+	// if len(e24) != 1 {
+	// 	t.Errorf("wrong number of items. got=%d, expected=1", len(e24))
+	// }
+
+	// e25 := testEval("p > span")
+	// if len(e25) != 4 {
+	// 	t.Errorf("wrong number of items. got=%d, expected=4", len(e25))
+	// }
+
+	// e26 := testEval("div + p")
+	// if len(e26) != 2 {
+	// 	t.Errorf("wrong number of items. got=%d, expected=2", len(e26))
+	// }
+
+	e27 := testEval("p:nth-child(2n+1)")
+	if len(e27) != 5 {
+		t.Errorf("wrong number of items. got=%d, expected=5", len(e27))
 	}
 }
 
