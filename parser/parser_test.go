@@ -91,7 +91,7 @@ func TestExpression(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		e := p.parseExpression()
+		e := p.ParseExpression()
 
 		actual := e.String()
 		if actual != tt.expected {

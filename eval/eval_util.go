@@ -2,7 +2,6 @@ package eval
 
 import (
 	"github.com/zzossig/carrot/ast"
-	"github.com/zzossig/carrot/object"
 	"golang.org/x/net/html"
 )
 
@@ -22,7 +21,24 @@ func isContain(src []*html.Node, target *html.Node) bool {
 	return false
 }
 
-func collectSubSibling(ctx *object.Context) []*html.Node {
+func walkDesc(n *html.Node) []*html.Node {
+	var nodes []*html.Node
+
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		if c.Type == html.ElementNode {
+			nodes = appendNode(nodes, c)
+			if c.FirstChild != nil {
+				for _, d := range walkDesc(c) {
+					nodes = appendNode(nodes, d)
+				}
+			}
+		}
+	}
+
+	return nodes
+}
+
+func collectSubSibling(ctx *Context) []*html.Node {
 	var nodes []*html.Node
 
 	for _, n := range ctx.CNode {
@@ -36,7 +52,7 @@ func collectSubSibling(ctx *object.Context) []*html.Node {
 	return nodes
 }
 
-func collectNextSibling(ctx *object.Context) []*html.Node {
+func collectNextSibling(ctx *Context) []*html.Node {
 	var nodes []*html.Node
 
 	for _, n := range ctx.CNode {
@@ -51,7 +67,7 @@ func collectNextSibling(ctx *object.Context) []*html.Node {
 	return nodes
 }
 
-func collectChild(ctx *object.Context) []*html.Node {
+func collectChild(ctx *Context) []*html.Node {
 	var nodes []*html.Node
 
 	for _, n := range ctx.CNode {
@@ -65,7 +81,7 @@ func collectChild(ctx *object.Context) []*html.Node {
 	return nodes
 }
 
-func collectDesc(ctx *object.Context) []*html.Node {
+func collectDesc(ctx *Context) []*html.Node {
 	var nodes []*html.Node
 
 	for _, n := range ctx.CNode {
@@ -77,31 +93,13 @@ func collectDesc(ctx *object.Context) []*html.Node {
 	return nodes
 }
 
-func collectDescOrSelf(ctx *object.Context) []*html.Node {
+func collectDescOrSelf(ctx *Context) []*html.Node {
 	var nodes []*html.Node
 
 	for _, n := range ctx.CNode {
 		nodes = appendNode(nodes, n)
 		for _, d := range walkDesc(n) {
 			nodes = appendNode(nodes, d)
-		}
-	}
-
-	return nodes
-}
-
-func walkDesc(n *html.Node) []*html.Node {
-	var nodes []*html.Node
-
-	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		if c.Type == html.ElementNode {
-			nodes = appendNode(nodes, n)
-
-			if c.FirstChild != nil {
-				for _, d := range walkDesc(c) {
-					nodes = appendNode(nodes, d)
-				}
-			}
 		}
 	}
 

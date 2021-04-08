@@ -58,6 +58,41 @@ func New(l *lexer.Lexer) *Parser {
 	return p
 }
 
+func (p *Parser) ParseExpression() ast.Expression {
+	prefix := p.prefixParseFns[p.curToken.Type]
+	if prefix == nil {
+		p.newError("no prefix parse function for %s found", p.curToken.Type)
+		return nil
+	}
+	leftExp := prefix()
+
+	for !p.peekTokenIs(token.EOF) {
+		infix := p.infixParseFns[p.peekToken.Type]
+		if infix == nil {
+			return leftExp
+		}
+
+		p.nextToken()
+
+		leftExp = infix(leftExp)
+	}
+
+	return leftExp
+}
+
+func (p *Parser) Errors() []error {
+	return p.errors
+}
+
+func (p *Parser) newError(format string, a ...interface{}) {
+	p.errors = append(p.errors, fmt.Errorf(format, a...))
+}
+
+func (p *Parser) peekError(t token.Type) {
+	msg := fmt.Errorf("expected next token to be %s, got %s instead", t, p.peekToken.Type)
+	p.errors = append(p.errors, msg)
+}
+
 func (p *Parser) nextToken() {
 	p.curToken = p.peekToken
 	p.peekSpace = p.l.PeekSpace()
@@ -87,41 +122,6 @@ func (p *Parser) expectPeek(t token.Type) bool {
 		p.peekError(t)
 		return false
 	}
-}
-
-func (p *Parser) Errors() []error {
-	return p.errors
-}
-
-func (p *Parser) newError(format string, a ...interface{}) {
-	p.errors = append(p.errors, fmt.Errorf(format, a...))
-}
-
-func (p *Parser) peekError(t token.Type) {
-	msg := fmt.Errorf("expected next token to be %s, got %s instead", t, p.peekToken.Type)
-	p.errors = append(p.errors, msg)
-}
-
-func (p *Parser) parseExpression() ast.Expression {
-	prefix := p.prefixParseFns[p.curToken.Type]
-	if prefix == nil {
-		p.newError("no prefix parse function for %s found", p.curToken.Type)
-		return nil
-	}
-	leftExp := prefix()
-
-	for !p.peekTokenIs(token.EOF) {
-		infix := p.infixParseFns[p.peekToken.Type]
-		if infix == nil {
-			return leftExp
-		}
-
-		p.nextToken()
-
-		leftExp = infix(leftExp)
-	}
-
-	return leftExp
 }
 
 func (p *Parser) parseString() ast.Expression {
@@ -161,13 +161,13 @@ func (p *Parser) parseSequence() ast.Expression {
 		if !p.peekTokenIs(token.EOF, token.PLUS, token.GT, token.TILDE) {
 			p.nextToken()
 			selector := &ast.Selector{Left: seq, Token: token.TokenMap("w")}
-			selector.Right = p.parseExpression()
+			selector.Right = p.ParseExpression()
 			return selector
 		} else {
 			p.nextToken()
 			selector := &ast.Selector{Left: seq, Token: p.curToken}
 			p.nextToken()
-			selector.Right = p.parseExpression()
+			selector.Right = p.ParseExpression()
 			return selector
 		}
 	}
@@ -181,13 +181,13 @@ func (p *Parser) parseSimpleSequence(seq *ast.Sequence) ast.Expression {
 			if !p.peekTokenIs(token.EOF, token.PLUS, token.GT, token.TILDE) {
 				p.nextToken()
 				selector := &ast.Selector{Left: seq, Token: token.TokenMap("w")}
-				selector.Right = p.parseExpression()
+				selector.Right = p.ParseExpression()
 				return selector
 			} else {
 				p.nextToken()
 				selector := &ast.Selector{Left: seq, Token: p.curToken}
 				p.nextToken()
-				selector.Right = p.parseExpression()
+				selector.Right = p.ParseExpression()
 				return selector
 			}
 		}
@@ -277,7 +277,7 @@ func (p *Parser) parseGroup(left ast.Expression) ast.Expression {
 		g.Selectors = append(g.Selectors, left.Selectors...)
 
 		p.nextToken()
-		right := p.parseExpression()
+		right := p.ParseExpression()
 		g.Selectors = append(g.Selectors, right)
 		return g
 	default:
@@ -285,7 +285,7 @@ func (p *Parser) parseGroup(left ast.Expression) ast.Expression {
 		g.Selectors = append(g.Selectors, left)
 
 		p.nextToken()
-		right := p.parseExpression()
+		right := p.ParseExpression()
 
 		if r, ok := right.(*ast.Group); ok {
 			g.Selectors = append(g.Selectors, r.Selectors...)
@@ -301,7 +301,7 @@ func (p *Parser) parseSelector(left ast.Expression) ast.Expression {
 	s := &ast.Selector{Left: left, Token: p.curToken}
 
 	p.nextToken()
-	s.Right = p.parseExpression()
+	s.Right = p.ParseExpression()
 
 	return s
 }

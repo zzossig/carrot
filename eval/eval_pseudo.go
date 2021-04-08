@@ -2,11 +2,10 @@ package eval
 
 import (
 	"github.com/zzossig/carrot/ast"
-	"github.com/zzossig/carrot/object"
 	"golang.org/x/net/html"
 )
 
-func evalPIdent(ident *ast.Ident, ctx *object.Context, isNeg bool) []*html.Node {
+func evalPIdent(ident *ast.Ident, ctx *Context, isNeg bool) []*html.Node {
 	var nodes []*html.Node
 	switch ident.Value {
 	case "first-child":
@@ -34,7 +33,7 @@ func evalPIdent(ident *ast.Ident, ctx *object.Context, isNeg bool) []*html.Node 
 	return nodes
 }
 
-func evalPFP(fp *ast.FunctionalPseudo, ctx *object.Context, isNeg bool) []*html.Node {
+func evalPFP(fp *ast.FunctionalPseudo, ctx *Context, isNeg bool) []*html.Node {
 	switch fp.Token.Literal {
 	case "nth-child":
 		return nthChild(fp.Arg, ctx, isNeg)
@@ -48,7 +47,7 @@ func evalPFP(fp *ast.FunctionalPseudo, ctx *object.Context, isNeg bool) []*html.
 	return nil
 }
 
-func fnFirstChild(ctx *object.Context, isNeg bool) []*html.Node {
+func fnFirstChild(ctx *Context, isNeg bool) []*html.Node {
 	var nodes []*html.Node
 
 	if isNeg {
@@ -68,7 +67,7 @@ func fnFirstChild(ctx *object.Context, isNeg bool) []*html.Node {
 	return nodes
 }
 
-func fnLastChild(ctx *object.Context, isNeg bool) []*html.Node {
+func fnLastChild(ctx *Context, isNeg bool) []*html.Node {
 	var nodes []*html.Node
 
 	if isNeg {
@@ -88,7 +87,7 @@ func fnLastChild(ctx *object.Context, isNeg bool) []*html.Node {
 	return nodes
 }
 
-func fnFirstOfType(ctx *object.Context, isNeg bool) []*html.Node {
+func fnFirstOfType(ctx *Context, isNeg bool) []*html.Node {
 	var nodes []*html.Node
 
 	if isNeg {
@@ -108,7 +107,7 @@ func fnFirstOfType(ctx *object.Context, isNeg bool) []*html.Node {
 	return nodes
 }
 
-func fnLastOfType(ctx *object.Context, isNeg bool) []*html.Node {
+func fnLastOfType(ctx *Context, isNeg bool) []*html.Node {
 	var nodes []*html.Node
 
 	if isNeg {
@@ -128,7 +127,7 @@ func fnLastOfType(ctx *object.Context, isNeg bool) []*html.Node {
 	return nodes
 }
 
-func fnOnlyChild(ctx *object.Context, isNeg bool) []*html.Node {
+func fnOnlyChild(ctx *Context, isNeg bool) []*html.Node {
 	var nodes []*html.Node
 
 	if isNeg {
@@ -148,7 +147,7 @@ func fnOnlyChild(ctx *object.Context, isNeg bool) []*html.Node {
 	return nodes
 }
 
-func fnOnlyOfType(ctx *object.Context, isNeg bool) []*html.Node {
+func fnOnlyOfType(ctx *Context, isNeg bool) []*html.Node {
 	var nodes []*html.Node
 
 	if isNeg {
@@ -168,7 +167,7 @@ func fnOnlyOfType(ctx *object.Context, isNeg bool) []*html.Node {
 	return nodes
 }
 
-func fnEmpty(ctx *object.Context, isNeg bool) []*html.Node {
+func fnEmpty(ctx *Context, isNeg bool) []*html.Node {
 	var nodes []*html.Node
 
 	if isNeg {
@@ -188,7 +187,7 @@ func fnEmpty(ctx *object.Context, isNeg bool) []*html.Node {
 	return nodes
 }
 
-func nthChild(arg *ast.Arg, ctx *object.Context, isNeg bool) []*html.Node {
+func nthChild(arg *ast.Arg, ctx *Context, isNeg bool) []*html.Node {
 	var nodes []*html.Node
 
 	switch arg.TypeID {
@@ -256,7 +255,7 @@ func nthChild(arg *ast.Arg, ctx *object.Context, isNeg bool) []*html.Node {
 	return nodes
 }
 
-func nthLastChild(arg *ast.Arg, ctx *object.Context, isNeg bool) []*html.Node {
+func nthLastChild(arg *ast.Arg, ctx *Context, isNeg bool) []*html.Node {
 	var nodes []*html.Node
 
 	switch arg.TypeID {
@@ -324,7 +323,7 @@ func nthLastChild(arg *ast.Arg, ctx *object.Context, isNeg bool) []*html.Node {
 	return nodes
 }
 
-func nthOfType(arg *ast.Arg, ctx *object.Context, isNeg bool) []*html.Node {
+func nthOfType(arg *ast.Arg, ctx *Context, isNeg bool) []*html.Node {
 	var nodes []*html.Node
 
 	switch arg.TypeID {
@@ -392,7 +391,7 @@ func nthOfType(arg *ast.Arg, ctx *object.Context, isNeg bool) []*html.Node {
 	return nodes
 }
 
-func nthLastOfType(arg *ast.Arg, ctx *object.Context, isNeg bool) []*html.Node {
+func nthLastOfType(arg *ast.Arg, ctx *Context, isNeg bool) []*html.Node {
 	var nodes []*html.Node
 
 	switch arg.TypeID {

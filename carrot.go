@@ -1,3 +1,3 @@
 package carrot
 
-// func New()
+func New()
