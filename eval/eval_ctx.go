@@ -10,6 +10,7 @@ import (
 
 type Context struct {
 	Doc   *html.Node
+	Nodes []*html.Node
 	CNode []*html.Node
 	CType string
 }
@@ -43,13 +44,21 @@ func (c *Context) SetDoc(input string) error {
 		c.Doc = parsedHTML
 	}
 
-	InitCNode(c)
+	setCNode(c)
 
 	return nil
 }
 
-func InitCNode(ctx *Context) {
+func (c *Context) InitContext() {
+	c.CType = ""
+	c.CNode = make([]*html.Node, len(c.Nodes))
+	copy(c.CNode, c.Nodes)
+}
+
+func setCNode(ctx *Context) {
 	if ctx.Doc != nil {
 		ctx.CNode = walkDesc(ctx.Doc)
+		ctx.Nodes = make([]*html.Node, len(ctx.CNode))
+		copy(ctx.Nodes, ctx.CNode)
 	}
 }

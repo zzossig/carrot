@@ -1,6 +1,8 @@
 package eval
 
 import (
+	"strings"
+
 	"github.com/zzossig/carrot/ast"
 	"golang.org/x/net/html"
 )
@@ -44,7 +46,7 @@ func collectSubSibling(ctx *Context) []*html.Node {
 	for _, n := range ctx.CNode {
 		for s := n.NextSibling; s != nil; s = s.NextSibling {
 			if s.Type == html.ElementNode {
-				nodes = appendNode(nodes, n)
+				nodes = append(nodes, s)
 			}
 		}
 	}
@@ -58,7 +60,7 @@ func collectNextSibling(ctx *Context) []*html.Node {
 	for _, n := range ctx.CNode {
 		for s := n.NextSibling; s != nil; s = s.NextSibling {
 			if s.Type == html.ElementNode {
-				nodes = appendNode(nodes, n)
+				nodes = append(nodes, s)
 				break
 			}
 		}
@@ -73,7 +75,7 @@ func collectChild(ctx *Context) []*html.Node {
 	for _, n := range ctx.CNode {
 		for c := n.FirstChild; c != nil; c = c.NextSibling {
 			if c.Type == html.ElementNode {
-				nodes = appendNode(nodes, n)
+				nodes = append(nodes, c)
 			}
 		}
 	}
@@ -85,9 +87,7 @@ func collectDesc(ctx *Context) []*html.Node {
 	var nodes []*html.Node
 
 	for _, n := range ctx.CNode {
-		for _, d := range walkDesc(n) {
-			nodes = appendNode(nodes, d)
-		}
+		nodes = append(nodes, walkDesc(n)...)
 	}
 
 	return nodes
@@ -104,6 +104,16 @@ func collectDescOrSelf(ctx *Context) []*html.Node {
 	}
 
 	return nodes
+}
+
+func isDashMatched(s, substr string) bool {
+	if s == substr {
+		return true
+	}
+	if strings.HasPrefix(s, substr+"-") {
+		return true
+	}
+	return false
 }
 
 func isFirstChild(n *html.Node) bool {

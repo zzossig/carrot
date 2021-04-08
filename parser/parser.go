@@ -66,7 +66,7 @@ func (p *Parser) ParseExpression() ast.Expression {
 	}
 	leftExp := prefix()
 
-	for !p.peekTokenIs(token.EOF) {
+	for !p.peekTokenIs(token.EOF) && !p.peekTokenIs(token.ILLEGAL) {
 		infix := p.infixParseFns[p.peekToken.Type]
 		if infix == nil {
 			return leftExp
@@ -75,6 +75,11 @@ func (p *Parser) ParseExpression() ast.Expression {
 		p.nextToken()
 
 		leftExp = infix(leftExp)
+	}
+
+	if p.peekTokenIs(token.ILLEGAL) {
+		p.newError("parsing error: illegal token - %s", p.peekToken.Literal)
+		return nil
 	}
 
 	return leftExp
@@ -95,6 +100,9 @@ func (p *Parser) peekError(t token.Type) {
 
 func (p *Parser) nextToken() {
 	p.curToken = p.peekToken
+	if p.peekTokenIs(token.ILLEGAL) {
+		p.newError("parsing error: illegal token")
+	}
 	p.peekSpace = p.l.PeekSpace()
 	p.peekToken = p.l.NextToken()
 }

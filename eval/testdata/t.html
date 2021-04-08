@@ -1,40 +1,44 @@
 <html>
   <head>
-    
+    <style>
+      p[class*=foo] {
+        color: red;
+      }
+    </style>
   </head>
   <body>
-    <h1>h1</h1>
+    <h1 title="carrot">h1</h1>
     <p>Lorem ipsum dolor sit amet</p>
     <p>Lorem ipsum dolor sit amet</p>
     <p>Lorem ipsum dolor sit amet</p>
     <h2>h2</h2>
     <p>Lorem ipsum dolor sit amet</p>
     <h3>h3</h3>
-    <p>Lorem ipsum dolor sit amet</p>
+    <p class="foo-bar">Lorem ipsum dolor sit amet</p>
     <h4>h4</h4>
-    <p>Lorem ipsum dolor sit amet</p>
+    <p class="bar-foo">Lorem ipsum dolor sit amet</p>
     <h5>h5</h5>
-    <p>Lorem ipsum dolor sit amet</p>
+    <p class="foo-bar">Lorem ipsum dolor sit amet</p>
     <h6>h6</h6>
     <div id="a">Lorem ipsum dolor sit amet</div>
     <div id="b">Lorem ipsum dolor sit amet</div>
     <div id="c">Lorem ipsum dolor sit amet</div>
-    <div id="1" class="depth">
-      <div id="2" class="depth">
+    <div id="d" class="depth">
+      <div id="e" class="depth">
         <p>Lorem ipsum dolor sit amet</p>
-        <div id="3" class="depth">
-          <div id="4" class="depth">
+        <div id="f" class="depth">
+          <div id="g" class="depth">
             Nam quis efficitur nisl
-            <p>Lorem ipsum dolor sit amet</p>
-            <p>Lorem ipsum dolor sit amet</p>
+            <p class="foobar">Lorem ipsum dolor sit amet</p>
+            <p class="foo">Lorem ipsum dolor sit amet</p>
           </div>
         </div>
       </div>
-      <p>Lorem ipsum dolor sit amet</p>
+      <p class="p q r">Lorem ipsum dolor sit amet</p>
     </div>
-    <p><span>Lorem</span> ipsum dolor sit amet</p>
-    <p>Lorem <span>ipsum</span> dolor sit amet</p>
-    <p>Lorem ipsum dolor <span>sit</span> amet</p>
-    <p>Lorem ipsum dolor sit <span>amet</span></p>
+    <p class="foo"><span>Lorem</span> ipsum dolor sit amet</p>
+    <p class="bar">Lorem <span class="example">ipsum example</span> dolor sit amet</p>
+    <p class="foobar">Lorem ipsum dolor <span hello="Cleveland" goodbye="Columbus">sit</span> amet</p>
+    <p>Lorem ipsum dolor sit <span hello="Cleveland">amet</span></p>
   </body>
 </html>

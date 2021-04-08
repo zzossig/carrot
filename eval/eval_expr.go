@@ -8,16 +8,16 @@ import (
 	"golang.org/x/net/html"
 )
 
-func evalGroup(expr ast.Expression) []*html.Node {
+func evalGroup(expr ast.Expression, ctx *Context) []*html.Node {
 	g := expr.(*ast.Group)
 	var nodes []*html.Node
 
 	for _, selector := range g.Selectors {
-		c := NewContext()
-		e := Eval(selector, c)
+		e := Eval(selector, ctx)
 		for _, ee := range e {
 			nodes = appendNode(nodes, ee)
 		}
+		ctx.InitContext()
 	}
 
 	return nodes
@@ -95,6 +95,12 @@ func evalClass(expr ast.Expression, ctx *Context) []*html.Node {
 func evalHash(expr ast.Expression, ctx *Context) []*html.Node {
 	h := expr.(*ast.Hash)
 	var nodes []*html.Node
+
+	if h.Name == "" {
+		return nodes
+	} else if strings.ContainsRune("0123456789", rune(h.Name[0])) {
+		return nodes
+	}
 
 	for _, n := range ctx.CNode {
 		for _, a := range n.Attr {
@@ -287,7 +293,7 @@ func evalAttrib(expr ast.Expression, ctx *Context, isNeg bool) []*html.Node {
 				for _, n := range ctx.CNode {
 					for _, a := range n.Attr {
 						if a.Key == ae.Left.Value {
-							if strings.HasPrefix(a.Val, "en") {
+							if isDashMatched(a.Val, ae.Right.Value) {
 								has = true
 							}
 						}
@@ -302,7 +308,7 @@ func evalAttrib(expr ast.Expression, ctx *Context, isNeg bool) []*html.Node {
 				for _, n := range ctx.CNode {
 					for _, a := range n.Attr {
 						if a.Key == ae.Left.Value {
-							if strings.HasPrefix(a.Val, "en") {
+							if isDashMatched(a.Val, ae.Right.Value) {
 								nodes = appendNode(nodes, n)
 							}
 						}

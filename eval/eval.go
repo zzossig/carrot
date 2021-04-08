@@ -8,7 +8,7 @@ import (
 func Eval(expr ast.Expression, ctx *Context) []*html.Node {
 	switch expr := expr.(type) {
 	case *ast.Group:
-		return evalGroup(expr)
+		return evalGroup(expr, ctx)
 	case *ast.Selector:
 		return evalSelector(expr, ctx)
 	case *ast.Sequence:
