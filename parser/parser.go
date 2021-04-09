@@ -16,6 +16,7 @@ type (
 	infixParseFn  func(ast.Expression) ast.Expression
 )
 
+// Parser object
 type Parser struct {
 	l      *lexer.Lexer
 	errors []error
@@ -28,6 +29,7 @@ type Parser struct {
 	infixParseFns  map[token.Type]infixParseFn
 }
 
+// New returns parser object
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{
 		l:      l,
@@ -61,6 +63,7 @@ func New(l *lexer.Lexer) *Parser {
 	return p
 }
 
+// ParseExpression is an entry point to parse expression
 func (p *Parser) ParseExpression() ast.Expression {
 	prefix := p.prefixParseFns[p.curToken.Type]
 	if prefix == nil {
@@ -88,6 +91,7 @@ func (p *Parser) ParseExpression() ast.Expression {
 	return leftExp
 }
 
+// Errors returns errors field
 func (p *Parser) Errors() []error {
 	return p.errors
 }
@@ -129,10 +133,9 @@ func (p *Parser) expectPeek(t token.Type) bool {
 	if p.peekTokenIs(t) {
 		p.nextToken()
 		return true
-	} else {
-		p.peekError(t)
-		return false
 	}
+	p.peekError(t)
+	return false
 }
 
 func (p *Parser) parseString() ast.Expression {
@@ -174,13 +177,12 @@ func (p *Parser) parseSequence() ast.Expression {
 			selector := &ast.Selector{Left: seq, Token: token.TokenMap("w")}
 			selector.Right = p.ParseExpression()
 			return selector
-		} else {
-			p.nextToken()
-			selector := &ast.Selector{Left: seq, Token: p.curToken}
-			p.nextToken()
-			selector.Right = p.ParseExpression()
-			return selector
 		}
+		p.nextToken()
+		selector := &ast.Selector{Left: seq, Token: p.curToken}
+		p.nextToken()
+		selector.Right = p.ParseExpression()
+		return selector
 	}
 
 	return p.parseSimpleSequence(seq)
@@ -194,13 +196,12 @@ func (p *Parser) parseSimpleSequence(seq *ast.Sequence) ast.Expression {
 				selector := &ast.Selector{Left: seq, Token: token.TokenMap("w")}
 				selector.Right = p.ParseExpression()
 				return selector
-			} else {
-				p.nextToken()
-				selector := &ast.Selector{Left: seq, Token: p.curToken}
-				p.nextToken()
-				selector.Right = p.ParseExpression()
-				return selector
 			}
+			p.nextToken()
+			selector := &ast.Selector{Left: seq, Token: p.curToken}
+			p.nextToken()
+			selector.Right = p.ParseExpression()
+			return selector
 		}
 
 		switch p.peekToken.Type {

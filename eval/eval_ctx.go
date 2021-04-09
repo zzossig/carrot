@@ -9,6 +9,7 @@ import (
 	"golang.org/x/net/html"
 )
 
+// Context contains Nodes that is used in Eval function.
 type Context struct {
 	Doc   *html.Node
 	Nodes []*html.Node
@@ -16,10 +17,13 @@ type Context struct {
 	CType string
 }
 
+// NewContext creates a new context
 func NewContext() *Context {
 	return &Context{}
 }
 
+// SetDoc set Doc field in a Context
+// input param can be url or local filepath.
 func (c *Context) SetDoc(input string) error {
 	if file, err := os.Open(input); err == nil {
 		defer file.Close()
@@ -54,6 +58,7 @@ func (c *Context) SetDoc(input string) error {
 	return nil
 }
 
+// SetDocR set Doc from http.Response
 func (c *Context) SetDocR(r *http.Response) error {
 	defer r.Body.Close()
 
@@ -73,6 +78,7 @@ func (c *Context) SetDocR(r *http.Response) error {
 	return nil
 }
 
+// SetDocN set Doc from html.Node
 func (c *Context) SetDocN(n *html.Node) {
 	c.Doc = n
 	if c.Doc != nil {
@@ -82,6 +88,7 @@ func (c *Context) SetDocN(n *html.Node) {
 	}
 }
 
+// SetDocS set Doc from string
 func (c *Context) SetDocS(s string) error {
 	nr := strings.NewReader(s)
 	parsedHTML, err := html.Parse(nr)
@@ -99,6 +106,7 @@ func (c *Context) SetDocS(s string) error {
 	return nil
 }
 
+// GetBackCtx resets the context as it was initially set.
 func (c *Context) GetBackCtx() {
 	c.CType = ""
 	c.CNode = make([]*html.Node, len(c.Nodes))

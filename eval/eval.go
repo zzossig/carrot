@@ -5,6 +5,7 @@ import (
 	"golang.org/x/net/html"
 )
 
+// Eval function evaluate CSS selector
 func Eval(expr ast.Expression, ctx *Context) []*html.Node {
 	switch expr := expr.(type) {
 	case *ast.Group:
