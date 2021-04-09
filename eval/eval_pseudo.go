@@ -92,13 +92,13 @@ func fnFirstOfType(ctx *Context, isNeg bool) []*html.Node {
 
 	if isNeg {
 		for _, n := range ctx.CNode {
-			if !isFirstChild(n) || n.Data != ctx.CType {
+			if !isFirstOfType(n, ctx.CType) {
 				nodes = appendNode(nodes, n)
 			}
 		}
 	} else {
 		for _, n := range ctx.CNode {
-			if isFirstChild(n) && n.Data == ctx.CType {
+			if isFirstOfType(n, ctx.CType) {
 				nodes = appendNode(nodes, n)
 			}
 		}
@@ -112,13 +112,13 @@ func fnLastOfType(ctx *Context, isNeg bool) []*html.Node {
 
 	if isNeg {
 		for _, n := range ctx.CNode {
-			if !isLastChild(n) || n.Data != ctx.CType {
+			if !isLastOfType(n, ctx.CType) {
 				nodes = appendNode(nodes, n)
 			}
 		}
 	} else {
 		for _, n := range ctx.CNode {
-			if isLastChild(n) && n.Data == ctx.CType {
+			if isLastOfType(n, ctx.CType) {
 				nodes = appendNode(nodes, n)
 			}
 		}
@@ -152,13 +152,13 @@ func fnOnlyOfType(ctx *Context, isNeg bool) []*html.Node {
 
 	if isNeg {
 		for _, n := range ctx.CNode {
-			if !isOnlyChlid(n) || n.Data != ctx.CType {
+			if !isOnlyOfType(n, ctx.CType) {
 				nodes = appendNode(nodes, n)
 			}
 		}
 	} else {
 		for _, n := range ctx.CNode {
-			if isOnlyChlid(n) && n.Data == ctx.CType {
+			if isOnlyOfType(n, ctx.CType) {
 				nodes = appendNode(nodes, n)
 			}
 		}

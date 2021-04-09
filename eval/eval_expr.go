@@ -400,6 +400,7 @@ func evalNegation(expr ast.Expression, ctx *Context) []*html.Node {
 	case 5:
 		nodes = evalAttrib(na.Attrib, ctx, true)
 	case 6:
+		nodes = evalPseudo(na.Pseudo, ctx, true)
 	}
 
 	ctx.CNode = nodes

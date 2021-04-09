@@ -413,17 +413,17 @@ func (p *Parser) parseArg() *ast.Arg {
 			return arg
 		}
 
+		dimRe := regexp.MustCompile(`^[-+]?[0-9]*[n]+[-+]?[0-9]*$`)
+		if dimRe.MatchString(str) {
+			arg.TypeID = 1
+			arg.Dimension = p.parseDimension(str)
+			return arg
+		}
+
 		identRe := regexp.MustCompile("^[A-Za-z]?[A-Za-z-_]*$")
 		if identRe.MatchString(str) {
 			arg.TypeID = 4
 			arg.Ident = &ast.Ident{Value: str}
-			return arg
-		}
-
-		dimRe := regexp.MustCompile(`^[-+]?[0-9]*[A-Za-z]+[-+]?[0-9]*$`)
-		if dimRe.MatchString(str) {
-			arg.TypeID = 1
-			arg.Dimension = p.parseDimension(str)
 			return arg
 		}
 

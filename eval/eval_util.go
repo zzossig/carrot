@@ -133,6 +133,23 @@ func isFirstChild(n *html.Node) bool {
 	return false
 }
 
+func isFirstOfType(n *html.Node, t string) bool {
+	if n.Parent == nil {
+		return false
+	}
+
+	for c := n.Parent.FirstChild; c != nil; c = c.NextSibling {
+		if c.Type == html.ElementNode && c.Data == t {
+			if c == n {
+				return true
+			}
+			break
+		}
+	}
+
+	return false
+}
+
 func isLastChild(n *html.Node) bool {
 	if n.Parent == nil {
 		return false
@@ -140,6 +157,23 @@ func isLastChild(n *html.Node) bool {
 
 	for c := n.Parent.LastChild; c != nil; c = c.PrevSibling {
 		if c.Type == html.ElementNode {
+			if c == n {
+				return true
+			}
+			break
+		}
+	}
+
+	return false
+}
+
+func isLastOfType(n *html.Node, t string) bool {
+	if n.Parent == nil {
+		return false
+	}
+
+	for c := n.Parent.LastChild; c != nil; c = c.PrevSibling {
+		if c.Type == html.ElementNode && c.Data == t {
 			if c == n {
 				return true
 			}
@@ -158,6 +192,21 @@ func isOnlyChlid(n *html.Node) bool {
 	cnt := 0
 	for c := n.Parent.FirstChild; c != nil; c = c.NextSibling {
 		if c.Type == html.ElementNode {
+			cnt++
+		}
+	}
+
+	return cnt == 1
+}
+
+func isOnlyOfType(n *html.Node, t string) bool {
+	if n.Parent == nil {
+		return false
+	}
+
+	cnt := 0
+	for c := n.Parent.FirstChild; c != nil; c = c.NextSibling {
+		if c.Type == html.ElementNode && c.Data == t {
 			cnt++
 		}
 	}
@@ -208,9 +257,9 @@ func isNOfType(n *html.Node, num int, t string) bool {
 
 	i := 0
 	for c := n.Parent.FirstChild; c != nil; c = c.NextSibling {
-		if c.Type == html.ElementNode {
+		if c.Type == html.ElementNode && c.Data == t {
 			i++
-			if i == num && c.Data == t {
+			if i == num && n == c {
 				return true
 			}
 		}
@@ -226,9 +275,9 @@ func isNLastOfType(n *html.Node, num int, t string) bool {
 
 	i := 0
 	for c := n.Parent.LastChild; c != nil; c = c.PrevSibling {
-		if c.Type == html.ElementNode {
+		if c.Type == html.ElementNode && c.Data == t {
 			i++
-			if i == num && c.Data == t {
+			if i == num && n == c {
 				return true
 			}
 		}
@@ -241,29 +290,26 @@ func isNthChild(n *html.Node, d *ast.Dimension) bool {
 	if n.Parent == nil {
 		return false
 	}
-	if d.A == 0 {
-		return isNChild(n, d.B)
+
+	a := d.A
+	b := d.B
+
+	if d.Aop == "-" {
+		a = -a
+	}
+	if d.Bop == "-" {
+		b = -b
 	}
 
-	var remaining = func(dd *ast.Dimension, i int) int {
-		a := dd.A
-		b := dd.B
-
-		if dd.Aop == "-" {
-			a = -a
-		}
-		if dd.Bop == "-" {
-			b = -b
-		}
-
-		return (i - b) % a
+	if d.A == 0 {
+		return isNChild(n, b)
 	}
 
 	i := 0
 	for c := n.Parent.FirstChild; c != nil; c = c.NextSibling {
 		if c.Type == html.ElementNode {
 			i++
-			if remaining(d, i) == 0 && i >= d.B && n == c {
+			if (i-b)%a == 0 && i >= b && n == c {
 				return true
 			}
 		}
@@ -276,30 +322,33 @@ func isNthLastChild(n *html.Node, d *ast.Dimension) bool {
 	if n.Parent == nil {
 		return false
 	}
-	if d.A == 0 {
-		return isNLastChild(n, d.B)
+
+	a := d.A
+	b := d.B
+
+	if d.Aop == "-" {
+		a = -a
+	}
+	if d.Bop == "-" {
+		b = -b
 	}
 
-	var remaining = func(dd *ast.Dimension, i int) int {
-		a := dd.A
-		b := dd.B
-
-		if dd.Aop == "-" {
-			a = -a
-		}
-		if dd.Bop == "-" {
-			b = -b
-		}
-
-		return (i - b) % a
+	if d.A == 0 {
+		return isNLastChild(n, b)
 	}
 
 	i := 0
 	for c := n.Parent.LastChild; c != nil; c = c.PrevSibling {
 		if c.Type == html.ElementNode {
 			i++
-			if remaining(d, i) == 0 && i >= d.B && n == c {
-				return true
+			if a < 0 {
+				if (i-b)%a == 0 && i <= b && n == c {
+					return true
+				}
+			} else {
+				if (i-b)%a == 0 && i >= b && n == c {
+					return true
+				}
 			}
 		}
 	}
@@ -311,30 +360,33 @@ func isNthOfType(n *html.Node, d *ast.Dimension, t string) bool {
 	if n.Parent == nil {
 		return false
 	}
-	if d.A == 0 {
-		return isNOfType(n, d.B, t)
+
+	a := d.A
+	b := d.B
+
+	if d.Aop == "-" {
+		a = -a
+	}
+	if d.Bop == "-" {
+		b = -b
 	}
 
-	var remaining = func(dd *ast.Dimension, i int) int {
-		a := dd.A
-		b := dd.B
-
-		if dd.Aop == "-" {
-			a = -a
-		}
-		if dd.Bop == "-" {
-			b = -b
-		}
-
-		return (i - b) % a
+	if d.A == 0 || (a < 0 && d.A > 1) {
+		return isNOfType(n, b, t)
 	}
 
 	i := 0
 	for c := n.Parent.FirstChild; c != nil; c = c.NextSibling {
-		if c.Type == html.ElementNode {
+		if c.Type == html.ElementNode && c.Data == t {
 			i++
-			if remaining(d, i) == 0 && i >= d.B && c.Data == t {
-				return true
+			if a < 0 {
+				if a*(i-1)+b > 0 && n == c {
+					return true
+				}
+			} else {
+				if (i-b)%a == 0 && i >= b && n == c {
+					return true
+				}
 			}
 		}
 	}
@@ -346,30 +398,33 @@ func isNthLastOfType(n *html.Node, d *ast.Dimension, t string) bool {
 	if n.Parent == nil {
 		return false
 	}
-	if d.A == 0 {
-		return isNLastOfType(n, d.B, t)
+
+	a := d.A
+	b := d.B
+
+	if d.Aop == "-" {
+		a = -a
+	}
+	if d.Bop == "-" {
+		b = -b
 	}
 
-	var remaining = func(dd *ast.Dimension, i int) int {
-		a := dd.A
-		b := dd.B
-
-		if dd.Aop == "-" {
-			a = -a
-		}
-		if dd.Bop == "-" {
-			b = -b
-		}
-
-		return (i - b) % a
+	if d.A == 0 || (a < 0 && d.A > 1) {
+		return isNLastOfType(n, b, t)
 	}
 
 	i := 0
 	for c := n.Parent.LastChild; c != nil; c = c.PrevSibling {
-		if c.Type == html.ElementNode {
+		if c.Type == html.ElementNode && c.Data == t {
 			i++
-			if remaining(d, i) == 0 && i >= d.B && c.Data == t {
-				return true
+			if a < 0 {
+				if a*(i-1)+b > 0 && n == c {
+					return true
+				}
+			} else {
+				if (i-b)%a == 0 && i >= b && n == c {
+					return true
+				}
 			}
 		}
 	}

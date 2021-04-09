@@ -1,18 +1,18 @@
 <html>
   <head>
     <style>
-      p:nth-child(2n+1) {
+      p:not(even) {
         color: red;
       }
     </style>
   </head>
   <body>
     <h1 title="carrot">h1</h1>
-    <p>Lorem ipsum dolor sit amet</p>
-    <p>Lorem ipsum dolor sit amet</p>
-    <p>Lorem ipsum dolor sit amet</p>
+    <p>Lorem ipsum dolor sit amet1</p>
+    <p>Lorem ipsum dolor sit amet2</p>
+    <p>Lorem ipsum dolor sit amet3</p>
     <h2>h2</h2>
-    <p>Lorem ipsum dolor sit amet</p>
+    <p>Lorem ipsum dolor sit amet4</p>
     <h3>h3</h3>
     <p class="foo-bar">Lorem ipsum dolor sit amet</p>
     <h4>h4</h4>
@@ -24,17 +24,19 @@
     <div id="b">Lorem ipsum dolor sit amet</div>
     <div id="c">Lorem ipsum dolor sit amet</div>
     <div id="d" class="depth">
+      <p>Lorem ipsum dolor sit amet33</p>
       <div id="e" class="depth">
-        <p>Lorem ipsum dolor sit amet</p>
+        <p>Lorem ipsum dolor sit amet44</p>
         <div id="f" class="depth">
+          <p>Lorem ipsum dolor sit amet11</p>
           <div id="g" class="depth">
             Nam quis efficitur nisl
-            <p class="foobar">Lorem ipsum dolor sit amet</p>
-            <p class="foo">Lorem ipsum dolor sit amet</p>
+            <p class="foobar">Lorem ipsum dolor sit amet8</p>
+            <p class="foo">Lorem ipsum dolor sit amet7</p>
           </div>
         </div>
       </div>
-      <p class="p q r">Lorem ipsum dolor sit amet</p>
+      <p class="p q r">Lorem ipsum dolor<span></span> sit amet</p>
     </div>
     <p class="foo"><span>Lorem</span> ipsum dolor sit amet</p>
     <p class="bar">Lorem <span class="example">ipsum example</span> dolor sit amet</p>
