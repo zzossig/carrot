@@ -1,5 +1,6 @@
 # 🥕carrot
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/zzossig/carrot.svg)](https://pkg.go.dev/github.com/zzossig/carrot)
 [![Go Report Card](https://goreportcard.com/badge/github.com/zzossig/carrot)](https://goreportcard.com/report/github.com/zzossig/carrot)
 > CSS Selectors Level 3 implementation
 
