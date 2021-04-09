@@ -17,7 +17,7 @@ func evalGroup(expr ast.Expression, ctx *Context) []*html.Node {
 		for _, ee := range e {
 			nodes = appendNode(nodes, ee)
 		}
-		ctx.InitContext()
+		ctx.GetBackCtx()
 	}
 
 	return nodes
@@ -401,6 +401,34 @@ func evalNegation(expr ast.Expression, ctx *Context) []*html.Node {
 		nodes = evalAttrib(na.Attrib, ctx, true)
 	case 6:
 		nodes = evalPseudo(na.Pseudo, ctx, true)
+	case 7:
+		for _, selector := range na.Group.Selectors {
+			negation := makeNegation(selector)
+			if negation == nil {
+				continue
+			}
+			nodes = evalNegation(negation, ctx)
+			ctx.CNode = nodes
+		}
+	}
+
+	ctx.CNode = nodes
+	return nodes
+}
+
+func evalHas(expr ast.Expression, ctx *Context) []*html.Node {
+	has := expr.(*ast.Has).HArg
+	var nodes []*html.Node
+
+	switch has.TypeID {
+	case 1:
+	case 2:
+	case 3:
+	case 4:
+	case 5:
+	case 6:
+	case 7:
+	case 8:
 	}
 
 	ctx.CNode = nodes

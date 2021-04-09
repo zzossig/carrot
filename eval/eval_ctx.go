@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"net/http"
 	"os"
+	"strings"
 
 	"golang.org/x/net/html"
 )
@@ -44,21 +45,62 @@ func (c *Context) SetDoc(input string) error {
 		c.Doc = parsedHTML
 	}
 
-	setCNode(c)
+	if c.Doc != nil {
+		c.CNode = walkDesc(c.Doc)
+		c.Nodes = make([]*html.Node, len(c.CNode))
+		copy(c.Nodes, c.CNode)
+	}
 
 	return nil
 }
 
-func (c *Context) InitContext() {
+func (c *Context) SetDocR(r *http.Response) error {
+	defer r.Body.Close()
+
+	nr := bufio.NewReader(r.Body)
+	parsedHTML, err := html.Parse(nr)
+	if err != nil {
+		return err
+	}
+
+	c.Doc = parsedHTML
+	if c.Doc != nil {
+		c.CNode = walkDesc(c.Doc)
+		c.Nodes = make([]*html.Node, len(c.CNode))
+		copy(c.Nodes, c.CNode)
+	}
+
+	return nil
+}
+
+func (c *Context) SetDocN(n *html.Node) {
+	c.Doc = n
+	if c.Doc != nil {
+		c.CNode = walkDesc(c.Doc)
+		c.Nodes = make([]*html.Node, len(c.CNode))
+		copy(c.Nodes, c.CNode)
+	}
+}
+
+func (c *Context) SetDocS(s string) error {
+	nr := strings.NewReader(s)
+	parsedHTML, err := html.Parse(nr)
+	if err != nil {
+		return err
+	}
+
+	c.Doc = parsedHTML
+	if c.Doc != nil {
+		c.CNode = walkDesc(c.Doc)
+		c.Nodes = make([]*html.Node, len(c.CNode))
+		copy(c.Nodes, c.CNode)
+	}
+
+	return nil
+}
+
+func (c *Context) GetBackCtx() {
 	c.CType = ""
 	c.CNode = make([]*html.Node, len(c.Nodes))
 	copy(c.CNode, c.Nodes)
-}
-
-func setCNode(ctx *Context) {
-	if ctx.Doc != nil {
-		ctx.CNode = walkDesc(ctx.Doc)
-		ctx.Nodes = make([]*html.Node, len(ctx.CNode))
-		copy(ctx.Nodes, ctx.CNode)
-	}
 }

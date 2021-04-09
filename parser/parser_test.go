@@ -86,6 +86,8 @@ func TestExpression(t *testing.T) {
 		{`h1.opener + h2`, `h1.opener + h2`},
 		{`h1 ~ pre`, `h1 ~ pre`},
 		{`H1 + *[REL=up]`, `H1 + *[REL=up]`},
+		{`body *:not(h1,h2,h3,h4,h5,h6)`, `body *:not(h1, h2, h3, h4, h5, h6)`},
+		{`a:has(> img)`, `a:has(> img)`},
 	}
 
 	for _, tt := range tests {

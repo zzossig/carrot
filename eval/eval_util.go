@@ -40,6 +40,51 @@ func walkDesc(n *html.Node) []*html.Node {
 	return nodes
 }
 
+func makeNegation(e ast.Expression) *ast.Negation {
+	neg := &ast.Negation{}
+	neg.NArg = &ast.NArg{}
+
+	switch e := e.(type) {
+	case *ast.Ident:
+		neg.NArg.Ident = e
+		neg.NArg.TypeID = 1
+	case *ast.Universal:
+		neg.NArg.Universal = e
+		neg.NArg.TypeID = 2
+	case *ast.Hash:
+		neg.NArg.Hash = e
+		neg.NArg.TypeID = 3
+	case *ast.Class:
+		neg.NArg.Class = e
+		neg.NArg.TypeID = 4
+	case *ast.Attrib:
+		neg.NArg.Attrib = e
+		neg.NArg.TypeID = 5
+	case *ast.Pseudo:
+		neg.NArg.Pseudo = e
+		neg.NArg.TypeID = 6
+	case *ast.Group:
+		neg.NArg.Group = e
+		neg.NArg.TypeID = 7
+	case *ast.Sequence:
+		if ident, ok := e.Expression.(*ast.Ident); ok {
+			neg.NArg.Ident = ident
+			neg.NArg.TypeID = 1
+			break
+		} else if univ, ok := e.Expression.(*ast.Universal); ok {
+			neg.NArg.Universal = univ
+			neg.NArg.TypeID = 1
+			break
+		}
+		if len(e.Exprs) != 1 {
+			return nil
+		}
+		return makeNegation(e.Exprs[0])
+	}
+
+	return neg
+}
+
 func collectSubSibling(ctx *Context) []*html.Node {
 	var nodes []*html.Node
 

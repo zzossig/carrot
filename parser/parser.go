@@ -44,6 +44,9 @@ func New(l *lexer.Lexer) *Parser {
 	p.prefixParseFns[token.DCOLON] = p.parseSequence
 	p.prefixParseFns[token.ASTERISK] = p.parseSequence
 	p.prefixParseFns[token.LBRACKET] = p.parseSequence
+	p.prefixParseFns[token.PLUS] = p.parseRSelector
+	p.prefixParseFns[token.GT] = p.parseRSelector
+	p.prefixParseFns[token.TILDE] = p.parseRSelector
 
 	p.infixParseFns = make(map[token.Type]infixParseFn)
 	p.infixParseFns[token.COMMA] = p.parseGroup
@@ -256,6 +259,14 @@ func (p *Parser) parsePseudo() ast.Expression {
 				return nil
 			}
 			return neg
+		} else if p.curToken.Literal == "has" {
+			has := &ast.Has{}
+			p.nextToken()
+			has.HArg = p.parseHArg()
+			if !p.expectPeek(token.RPAREN) {
+				return nil
+			}
+			return has
 		} else {
 			fp := &ast.FunctionalPseudo{Token: p.curToken}
 			p.nextToken()
@@ -312,6 +323,15 @@ func (p *Parser) parseSelector(left ast.Expression) ast.Expression {
 	s.Right = p.ParseExpression()
 
 	return s
+}
+
+func (p *Parser) parseRSelector() ast.Expression {
+	rs := &ast.RSelector{Token: p.curToken}
+
+	p.nextToken()
+	rs.Expr = p.ParseExpression()
+
+	return rs
 }
 
 func (p *Parser) parseAttr() ast.Expression {
@@ -433,38 +453,111 @@ func (p *Parser) parseArg() *ast.Arg {
 
 func (p *Parser) parseNArg() *ast.NArg {
 	narg := &ast.NArg{}
+	var g ast.Expression
 
 	switch p.curToken.Type {
 	case token.IDENT:
 		narg.TypeID = 1
 		narg.Ident = p.parseIdent().(*ast.Ident)
+		g = narg.Ident
 	case token.ASTERISK:
 		narg.TypeID = 2
 		narg.Universal = p.parseUniversal().(*ast.Universal)
+		g = narg.Universal
 	case token.HASH:
 		narg.TypeID = 3
 		narg.Hash = p.parseHash().(*ast.Hash)
+		g = narg.Hash
 	case token.DOT:
 		if c := p.parseClass(); c != nil {
 			narg.TypeID = 4
 			narg.Class = c.(*ast.Class)
+			g = narg.Class
 		}
 	case token.LBRACKET:
 		if a := p.parseAttr(); a != nil {
 			narg.TypeID = 5
 			narg.Attrib = a.(*ast.Attrib)
+			g = narg.Attrib
 		}
 	case token.COLON:
 		if pd := p.parsePseudo(); pd != nil {
-			pdTyped, ok := pd.(*ast.Pseudo)
-			if ok {
+			if pdTyped, ok := pd.(*ast.Pseudo); ok {
 				narg.TypeID = 6
 				narg.Pseudo = pdTyped
+				g = narg.Pseudo
 			}
 		}
 	}
 
+	if p.peekTokenIs(token.COMMA) {
+		narg.TypeID = 7
+		for g != nil && p.peekTokenIs(token.COMMA) {
+			p.nextToken()
+			narg.Group = p.parseGroup(g).(*ast.Group)
+			g = narg.Group
+		}
+	}
+
 	return narg
+}
+
+func (p *Parser) parseHArg() *ast.HArg {
+	harg := &ast.HArg{}
+	var g ast.Expression
+
+	switch p.curToken.Type {
+	case token.IDENT:
+		harg.TypeID = 1
+		harg.Ident = p.parseIdent().(*ast.Ident)
+		g = harg.Ident
+	case token.ASTERISK:
+		harg.TypeID = 2
+		harg.Universal = p.parseUniversal().(*ast.Universal)
+		g = harg.Universal
+	case token.HASH:
+		harg.TypeID = 3
+		harg.Hash = p.parseHash().(*ast.Hash)
+		g = harg.Hash
+	case token.DOT:
+		if c := p.parseClass(); c != nil {
+			harg.TypeID = 4
+			harg.Class = c.(*ast.Class)
+			g = harg.Class
+		}
+	case token.LBRACKET:
+		if a := p.parseAttr(); a != nil {
+			harg.TypeID = 5
+			harg.Attrib = a.(*ast.Attrib)
+			g = harg.Attrib
+		}
+	case token.COLON:
+		if pd := p.parsePseudo(); pd != nil {
+			if pdTyped, ok := pd.(*ast.Pseudo); ok {
+				harg.TypeID = 6
+				harg.Pseudo = pdTyped
+				g = harg.Pseudo
+			}
+		}
+	case token.PLUS:
+		fallthrough
+	case token.GT:
+		fallthrough
+	case token.TILDE:
+		harg.TypeID = 8
+		harg.RSelector = p.parseRSelector().(*ast.RSelector)
+	}
+
+	if p.peekTokenIs(token.COMMA) {
+		harg.TypeID = 7
+		for g != nil && p.peekTokenIs(token.COMMA) {
+			p.nextToken()
+			harg.Group = p.parseGroup(g).(*ast.Group)
+			g = harg.Group
+		}
+	}
+
+	return harg
 }
 
 func (p *Parser) parseDimension(str string) *ast.Dimension {

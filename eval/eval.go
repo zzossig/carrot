@@ -23,6 +23,8 @@ func Eval(expr ast.Expression, ctx *Context) []*html.Node {
 		return evalIdent(expr, ctx)
 	case *ast.Negation:
 		return evalNegation(expr, ctx)
+	case *ast.Has:
+		return evalHas(expr, ctx)
 	case *ast.Attrib:
 		return evalAttrib(expr, ctx, false)
 	case *ast.Pseudo:

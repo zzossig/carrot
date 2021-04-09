@@ -65,6 +65,25 @@ func (s *Selector) String() string {
 	return sb.String()
 }
 
+// RSelector ::= <relative-selector> = <combinator>? <complex-selector>
+type RSelector struct {
+	Expr  Expression
+	Token token.Token
+}
+
+func (rs *RSelector) expression() {}
+func (rs *RSelector) String() string {
+	var sb strings.Builder
+
+	sb.WriteString(rs.Token.Literal)
+	sb.WriteString(" ")
+	if rs.Expr != nil {
+		sb.WriteString(rs.Expr.String())
+	}
+
+	return sb.String()
+}
+
 // Sequence ::= [ type_selector | universal ]
 //     		 simple_sequence*
 //   		 | simple_sequence+
@@ -145,7 +164,7 @@ func (ae *AttrExpr) expression() {}
 func (ae *AttrExpr) String() string {
 	switch ae.TypeID {
 	case 1:
-		return fmt.Sprintf("%s", ae.Left.String())
+		return ae.Left.String()
 	case 2:
 		return fmt.Sprintf("%s%s%s", ae.Left.String(), ae.Token.Literal, ae.Right.String())
 	}
@@ -167,7 +186,7 @@ func (n *Negation) String() string {
 	return sb.String()
 }
 
-// NArg ::= type_selector | universal | HASH | class | attrib | pseudo
+// NArg ::= type_selector | universal | HASH | class | attrib | pseudo | group
 type NArg struct {
 	*Ident
 	*Universal
@@ -175,6 +194,7 @@ type NArg struct {
 	*Class
 	*Attrib
 	*Pseudo
+	*Group
 	TypeID byte
 }
 
@@ -192,6 +212,57 @@ func (na *NArg) String() string {
 		return na.Attrib.String()
 	case 6:
 		return na.Pseudo.String()
+	case 7:
+		return na.Group.String()
+	}
+	return ""
+}
+
+// Has ::= https://drafts.csswg.org/selectors-4/#has-pseudo
+type Has struct {
+	*HArg
+}
+
+func (h *Has) expression() {}
+func (h *Has) String() string {
+	var sb strings.Builder
+	sb.WriteString(":has(")
+	sb.WriteString(h.HArg.String())
+	sb.WriteString(")")
+	return sb.String()
+}
+
+// HArg ::= ... | Group | RSelector
+type HArg struct {
+	*Ident
+	*Universal
+	*Hash
+	*Class
+	*Attrib
+	*Pseudo
+	*Group
+	*RSelector
+	TypeID byte
+}
+
+func (ha *HArg) String() string {
+	switch ha.TypeID {
+	case 1:
+		return ha.Ident.String()
+	case 2:
+		return ha.Universal.String()
+	case 3:
+		return ha.Hash.String()
+	case 4:
+		return ha.Class.String()
+	case 5:
+		return ha.Attrib.String()
+	case 6:
+		return ha.Pseudo.String()
+	case 7:
+		return ha.Group.String()
+	case 8:
+		return ha.RSelector.String()
 	}
 	return ""
 }
