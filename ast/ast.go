@@ -186,7 +186,7 @@ func (n *Negation) String() string {
 	return sb.String()
 }
 
-// NArg ::= type_selector | universal | HASH | class | attrib | pseudo | group
+// NArg ::= type_selector | universal | HASH | class | attrib | pseudo | group | sequence
 type NArg struct {
 	*Ident
 	*Universal
@@ -195,6 +195,7 @@ type NArg struct {
 	*Attrib
 	*Pseudo
 	*Group
+	*Sequence
 	TypeID byte
 }
 

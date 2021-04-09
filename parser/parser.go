@@ -458,13 +458,35 @@ func (p *Parser) parseNArg() *ast.NArg {
 
 	switch p.curToken.Type {
 	case token.IDENT:
-		narg.TypeID = 1
-		narg.Ident = p.parseIdent().(*ast.Ident)
-		g = narg.Ident
+		if p.peekTokenIs(token.COLON) {
+			seq, ok := p.parseSequence().(*ast.Sequence)
+			if !ok {
+				p.newError("parsing error: not a valid selector")
+				return nil
+			}
+			narg.TypeID = 8
+			narg.Sequence = seq
+			g = narg.Sequence
+		} else {
+			narg.TypeID = 1
+			narg.Ident = p.parseIdent().(*ast.Ident)
+			g = narg.Ident
+		}
 	case token.ASTERISK:
-		narg.TypeID = 2
-		narg.Universal = p.parseUniversal().(*ast.Universal)
-		g = narg.Universal
+		if p.peekTokenIs(token.COLON) {
+			seq, ok := p.parseSequence().(*ast.Sequence)
+			if !ok {
+				p.newError("parsing error: not a valid selector")
+				return nil
+			}
+			narg.TypeID = 8
+			narg.Sequence = seq
+			g = narg.Sequence
+		} else {
+			narg.TypeID = 2
+			narg.Universal = p.parseUniversal().(*ast.Universal)
+			g = narg.Universal
+		}
 	case token.HASH:
 		narg.TypeID = 3
 		narg.Hash = p.parseHash().(*ast.Hash)

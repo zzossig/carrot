@@ -106,7 +106,7 @@ func (c *Context) SetDocS(s string) error {
 	return nil
 }
 
-// GetBackCtx resets the context as it was initially set.
+// GetBackCtx resets the context to the initially set context.
 func (c *Context) GetBackCtx() {
 	c.CType = ""
 	c.CNode = make([]*html.Node, len(c.Nodes))

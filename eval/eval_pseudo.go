@@ -23,12 +23,7 @@ func evalPIdent(ident *ast.Ident, ctx *Context, isNeg bool) []*html.Node {
 	case "empty":
 		return fnEmpty(ctx, isNeg)
 	case "root":
-		if isNeg {
-			ctx.CNode = []*html.Node{ctx.Doc}
-			nodes = collectDesc(ctx)
-		} else {
-			nodes = appendNode(nodes, ctx.Doc)
-		}
+		return fnRoot(ctx, isNeg)
 	}
 	return nodes
 }
@@ -184,6 +179,19 @@ func fnEmpty(ctx *Context, isNeg bool) []*html.Node {
 		}
 	}
 
+	return nodes
+}
+
+func fnRoot(ctx *Context, isNeg bool) []*html.Node {
+	var nodes []*html.Node
+	if ctx.Doc.FirstChild != nil && ctx.CType == ctx.Doc.FirstChild.Data {
+		if isNeg {
+			ctx.CNode = []*html.Node{ctx.Doc.FirstChild}
+			nodes = collectDesc(ctx)
+		} else {
+			nodes = appendNode(nodes, ctx.Doc.FirstChild)
+		}
+	}
 	return nodes
 }
 

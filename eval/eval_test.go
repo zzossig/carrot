@@ -459,6 +459,26 @@ func TestCarrot(t *testing.T) {
 	if len(e84) != 4 {
 		t.Errorf("wrong number of items. got=%d, expected=4", len(e84))
 	}
+
+	e85 := testEval("html:root")
+	if len(e85) != 1 {
+		t.Errorf("wrong number of items. got=%d, expected=1", len(e85))
+	}
+
+	e86 := testEval("body :not(html:root, p)")
+	if len(e86) != 18 {
+		t.Errorf("wrong number of items. got=%d, expected=18", len(e86))
+	}
+
+	e87 := testEval("span:only-child")
+	if len(e87) != 5 {
+		t.Errorf("wrong number of items. got=%d, expected=5", len(e87))
+	}
+
+	e88 := testEval("p:only-child")
+	if len(e88) != 0 {
+		t.Errorf("wrong number of items. got=%d, expected=0", len(e88))
+	}
 }
 
 func testEval(input string) []*html.Node {
